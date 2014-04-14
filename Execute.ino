@@ -61,10 +61,12 @@ void moveSteps(int xSteps, int ySteps){
 	//actually set AccelStepper to move the motors, relative to the current position
 	else{
 		taskIsExecuting = true;
-		digitalWrite(enablePinX, LOW);
-		digitalWrite(enablePinY, LOW);
+		digitalWrite(xAxisEnable, LOW);
+		digitalWrite(yAxisEnable, LOW);
 		xMotor.move(xSteps);
 		yMotor.move(ySteps);
+
+		Serial.println("Moving " + xSteps "," + ySteps)
 
 		//update the failsafe internal state tracker
 		currentPosition[0] += xSteps;
@@ -89,7 +91,7 @@ void setNozzleHeight(String parameter){
 	//normal servo operation, set the angle to go to and wait the appropriate amount of time
 	if (SERVO_TYPE == "NORMAL"){
 		nozzleServo.write(angleToSet);
-		delayMicroseconds(timeToRun);
+		delay(timeToRun);
 	}
 	//continuous servo operation, just run it for the appropriate amount of time
 	else if(SERVO_TYPE == "CONTINUOUS"){
@@ -98,6 +100,7 @@ void setNozzleHeight(String parameter){
 	//once the servo is done moving, send a message to the computer telling it this command is done, and it is
 	//ready to receive another.
 	Serial.println("Done");
+
 }
 
 /**
@@ -107,13 +110,13 @@ void setNozzleHeight(String parameter){
 void calibrate(){
 	Serial.println("Calibrating!");
 	//calibrate in y direction
-	digitalWrite(enablePinX, LOW);
-	digitalWrite(enablePinY, LOW);
+	digitalWrite(xAxisEnable, LOW);
+	digitalWrite(yAxisEnable, LOW);
 	calibrateDirection(yMotor, calibrateY);
 	//calibate in x direction
 	calibrateDirection(xMotor, calibrateX);
-	digitalWrite(enablePinX, HIGH);
-	digitalWrite(enablePinY, HIGH);
+	digitalWrite(xAxisEnable, HIGH);
+	digitalWrite(yAxisEnable, HIGH);
 	//update our failsafe tracker
 	currentPosition[0] = 0;
 	currentPosition[1] = 0;
@@ -137,32 +140,15 @@ void calibrateDirection(AccelStepper motor, int motorPin){
 }
 
 /**
- * Move liquid with the pump. The input parameter specifies the amount of time (in ms) to turn the pump.
- * TODO: don't use delay, use a timer
+ * Move liquid with the pump. The input parameter specifies the number of steps to run the pump.
+ * 
  */
 void parseDispense(String parameter){
-	int delimPos = parameter.indexOf(',');
-	int fluidTime = (parameter.substring(0, delimPos)).toInt();
-	int airTime = (parameter.substring(delimPos + 1)).toInt();
-	
-	digitalWrite(valvePin, HIGH);
-	dispense(fluidTime);
-	digitalWrite(valvePin, LOW);
-	dispense(airTime);
-
-	digitalWrite(pumpIn, LOW);
-	digitalWrite(pumpOut, LOW);
-	Serial.println("Done");
-}
-
-void dispense(int fluidTime){
-	if (fluidTime < 0) {
-		digitalWrite(pumpIn, HIGH);
-		digitalWrite(pumpOut, LOW);
-	}
-	else if (fluidTime >= 0) { 
-		digitalWrite(pumpIn, LOW);
-		digitalWrite(pumpOut, HIGH);
-	}
-	delay(abs(fluidTime));
+	int steps = parameter.toInt();
+	//int delimPos = parameter.indexOf(',');
+	//int fluidTime = (parameter.substring(0, delimPos)).toInt();
+	//int airTime = (parameter.substring(delimPos + 1)).toInt();
+	taskIsExecuting = true;
+	digitalWrite(pumpEnable, LOW);
+	pumpMotor.move(steps);
 }
