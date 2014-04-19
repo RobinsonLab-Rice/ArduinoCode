@@ -10,9 +10,8 @@
  * http://www.airspayce.com/mikem/arduino/AccelStepper/index.html
  * and install it in the libraries folder of the Arduino program file.
  */
-#include <Servo.h> 
+#include <VarSpeedServo.h> 
 #include "AccelStepper.h"
-
 
 /**
  * Pin constants.
@@ -20,22 +19,35 @@
  * ino files together, and if the main .ino (this one) doesn't come first, it screws up. So, instead
  * of resigning myself to a shitty naming scheme, I moved all pin constants here.
  */
-const int nozzleServoPin = 2;   //PWM		Servo for Fluid Handler
+const int nozzleServoPin = 22;   //PWM		Servo for Fluid Handler
 const int valvePin = 31;
 const int pumpEnable = 32;    //enable pin for syringe stepper
 const int pumpStep = 33;      //step pin for syringe stepper
 const int pumpDir = 34;       //dir pin for syringle stepper
 const int calibrateX = 35;		//input 	used to calibrate, turns high when the arm is at (0,X)
 const int calibrateY = 37;		//input 	used to calibrate, turns high when the arm is at (X,0)
-const int yAxisStep = 39;
-const int yAxisDir = 40;
-const int yAxisEnable = 41;
-const int xAxisStep = 45;
-const int xAxisDir = 46;     //LOW is clockwise
-const int xAxisEnable = 47;
-const int PowerPin = 49;    //Power Rail On\Off pin
-const int pumpIn = 22;			//pin for the pump dc motor, can move it
-const int pumpOut = 23;  // Allows the pump to move
+const int yAxisEnable = 36;
+const int yAxisStep = 38;
+const int yAxisDir = 39;
+const int xAxisEnable = 40;
+const int xAxisStep = 41;
+const int xAxisDir = 42;     //LOW is clockwise
+
+
+//pin assignments for RAMPS board
+// const int nozzleServoPin = 4;   //PWM   Servo for Fluid Handler
+// const int valvePin = 31;
+// const int pumpEnable = 24;    //enable pin for syringe stepper
+// const int pumpStep = 26;      //step pin for syringe stepper
+// const int pumpDir = 28;       //dir pin for syringle stepper
+// const int calibrateX = 35;    //input   used to calibrate, turns high when the arm is at (0,X)
+// const int calibrateY = 37;    //input   used to calibrate, turns high when the arm is at (X,0)
+// const String yAxisEnable = A2;
+// const String yAxisStep = ;
+// const int yAxisDir = ;
+// const int xAxisEnable = ;
+// const int xAxisStep = ;
+// const int xAxisDir = ;     //LOW is clockwise
 
 /**
  * Maximum bounds that the arm is allowed to move over, in steps.
@@ -47,7 +59,7 @@ const int Y_BOUND = 3720;
  * Servo that controls the nozzle on arm that lowers down.
  * TODO: encapsulate the SERVO_TYPE and timeForCompleteRotation in a constructor for wrapper servo class.
  */
-Servo nozzleServo;
+VarSpeedServo nozzleServo;
 const String SERVO_TYPE = "NORMAL";
 /**
  * Amount of time (in mS) the servo takes for a 180 degree rotation, should be changed depending on end servo.
@@ -71,7 +83,7 @@ int currentPosition[2] = {0, 0};
  * Boolean for whether a task is currently being executed. Turns true when a task is processed and starts,
  * turns false when it is completed.
  */
-boolean taskIsExecuting = false;
+int taskIsExecuting = -1;
 
 /**
  * We need a string to keep track of the serial input, because it could not all come in at once.
@@ -98,14 +110,28 @@ void setup()  {
  * TODO: put the runs in a timer with appropriate interval, and just put the arduino into a low power mode otherwise
  */
 void loop()  {
-	if ((xMotor.distanceToGo() == 0) && (yMotor.distanceToGo() == 0) && (pumpMotor.distanceToGo() == 0) && (taskIsExecuting == true)){
-		//send back done so that we can have another task sent.
+  if ((xMotor.distanceToGo() == 0) && (yMotor.distanceToGo() == 0) && (taskIsExecuting == 0)){
     Serial.println("Done");
     digitalWrite(xAxisEnable, HIGH);
     digitalWrite(yAxisEnable, HIGH);
-    digitalWrite(pumpEnable, HIGH);
-    taskIsExecuting = false;
+    taskIsExecuting = -1;
   }
+  if ((pumpMotor.distanceToGo() == 0) && (taskIsExecuting == 1)){
+    digitalWrite(pumpEnable, HIGH);
+    delay(3000);
+    Serial.println("Done");
+    taskIsExecuting = -1;
+  }
+
+	// if ((xMotor.distanceToGo() == 0) && (yMotor.distanceToGo() == 0) && (pumpMotor.distanceToGo() == 0) && (taskIsExecuting == true)){
+	// 	//send back done so that we can have another task sent.
+
+ //    Serial.println("Done");
+ //    digitalWrite(xAxisEnable, HIGH);
+ //    digitalWrite(yAxisEnable, HIGH);
+ //    digitalWrite(pumpEnable, HIGH);
+ //    taskIsExecuting = false;
+ //  }
 	xMotor.run();
 	yMotor.run();
   pumpMotor.run();

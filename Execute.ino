@@ -9,6 +9,9 @@ void execute(String command, String parameter){
 	if (command.compareTo("move") == 0){
 		parseMove(parameter);
 	}
+	else if (command.compareTo("moveSteps") == 0){
+		parseMoveSteps(parameter);
+	}
 	else if (command.compareTo("nozzleHeight") == 0){
 		setNozzleHeight(parameter);
 	}
@@ -26,16 +29,50 @@ void execute(String command, String parameter){
 /**
  * Parse the input move parameter, then call moveMotor to actually do the movement.
  *
- * @param parameter - movement relative to current position, in the form of parameter = x,y
+ * @param parameter - movement, in mm, relative to current position, in the form of parameter = x,y
  */
 void parseMove(String parameter){
+	//separate the x from y values in this parameter
+	int delimPos = parameter.indexOf(',');
+	String xString = parameter.substring(0, delimPos);
+	String yString = parameter.substring(delimPos + 1);
+	int xDecimalPos = xString.indexOf('.');
+	int yDecimalPos = yString.indexOf('.');
+	int xNumBeforeDecimal = xString.substring(0, xDecimalPos).toInt();
+	int yNumBeforeDecimal = yString.substring(0, yDecimalPos).toInt();
+	String xAfterDecimal = xString.substring(xDecimalPos + 1);
+	String yAfterDecimal = yString.substring(yDecimalPos + 1);
+	float xToMove = abs(xNumBeforeDecimal) + xAfterDecimal.toInt()/pow(10.0, xAfterDecimal.length());
+	float yToMove = abs(yNumBeforeDecimal) + yAfterDecimal.toInt()/pow(10.0, yAfterDecimal.length());
+
+	if (xNumBeforeDecimal < 0) {
+		xToMove *= -1;
+	}
+	if (yNumBeforeDecimal < 0) {
+		yToMove *= -1;
+	}
+	//int yToMove = yString.toCharArray("", yString.length());
+	//int xToMove = atof((parameter.substring(0, delimPos)).toCharArray(char[], ));		//THIS IS IN MM
+	//int yToMove = atof((parameter.substring(delimPos + 1)).toCharArray());	//THIS IS IN MM
+	//int yToMove = (parameter.substring(delimPos + 1)).toFloat();	//THIS IS IN MM
+
+	//and now call to move the motor that amount
+	moveMillimeters(xToMove, yToMove);
+}
+
+/**
+ * Parse the input move parameter, then call moveSteps to actually do the movement.
+ *
+ * @param parameter - movement, in steps, relative to current position, in the form of parameter = x,y
+ */
+void parseMoveSteps(String parameter){
 	//separate the x from y values in this parameter
 	int delimPos = parameter.indexOf(',');
 	int xToMove = (parameter.substring(0, delimPos)).toInt();
 	int yToMove = (parameter.substring(delimPos + 1)).toInt();
 
 	//and now call to move the motor that amount
-	moveMillimeters(xToMove, yToMove);
+	moveSteps(xToMove, yToMove);
 }
 
 /**
@@ -47,6 +84,7 @@ void moveMillimeters(float xToMove, float yToMove){
 	//convert the input cm's to steps for the motor
 	int xSteps = round(xToMove*mmToStepConversion);
 	int ySteps = round(yToMove*mmToStepConversion);
+
 	moveSteps(xSteps, ySteps);
 }
 
@@ -60,13 +98,11 @@ void moveSteps(int xSteps, int ySteps){
 	}
 	//actually set AccelStepper to move the motors, relative to the current position
 	else{
-		taskIsExecuting = true;
+		taskIsExecuting = 0;
 		digitalWrite(xAxisEnable, LOW);
 		digitalWrite(yAxisEnable, LOW);
 		xMotor.move(xSteps);
 		yMotor.move(ySteps);
-
-		Serial.println("Moving " + xSteps "," + ySteps)
 
 		//update the failsafe internal state tracker
 		currentPosition[0] += xSteps;
@@ -90,8 +126,8 @@ void setNozzleHeight(String parameter){
 
 	//normal servo operation, set the angle to go to and wait the appropriate amount of time
 	if (SERVO_TYPE == "NORMAL"){
-		nozzleServo.write(angleToSet);
-		delay(timeToRun);
+		nozzleServo.write(angleToSet, 60, true);
+		//delay(timeToRun);
 	}
 	//continuous servo operation, just run it for the appropriate amount of time
 	else if(SERVO_TYPE == "CONTINUOUS"){
@@ -148,7 +184,7 @@ void parseDispense(String parameter){
 	//int delimPos = parameter.indexOf(',');
 	//int fluidTime = (parameter.substring(0, delimPos)).toInt();
 	//int airTime = (parameter.substring(delimPos + 1)).toInt();
-	taskIsExecuting = true;
+	taskIsExecuting = 1;
 	digitalWrite(pumpEnable, LOW);
 	pumpMotor.move(steps);
 }

@@ -3,6 +3,21 @@
  * automatically set by the AccelStepper library.
  */
 void initializeMotors(){	
+	pinMode(pumpEnable, OUTPUT);
+	pinMode(pumpStep, OUTPUT);
+	pinMode(pumpDir, OUTPUT);
+
+	pinMode(xAxisEnable, OUTPUT);
+	pinMode(xAxisStep, OUTPUT);
+	pinMode(xAxisDir, OUTPUT);
+
+	pinMode(yAxisEnable, OUTPUT);
+	pinMode(yAxisStep, OUTPUT);
+	pinMode(yAxisDir, OUTPUT);
+
+	pinMode(calibrateX, INPUT);
+	pinMode(calibrateY, INPUT);
+
 	digitalWrite(xAxisEnable, HIGH);
 	digitalWrite(yAxisEnable, HIGH);
 	digitalWrite(pumpEnable, HIGH);
@@ -13,8 +28,10 @@ void initializeMotors(){
 	xMotor.setMaxSpeed(2400.0);
 	xMotor.setAcceleration(1800.0);
 
-	pumpMotor.setMaxSpeed(100);
-	pumpMotor.setAcceleration(100);
+	//pumpMotor.setMaxSpeed(300);
+	//pumpMotor.setAcceleration(200);
+	pumpMotor.setMaxSpeed(1000);
+	pumpMotor.setAcceleration(500);
 
 	//set calibrate pins to be inputs, check when calibrate() is called
 	pinMode(calibrateX, INPUT); 
