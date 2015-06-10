@@ -126,7 +126,7 @@ void setNozzleHeight(String parameter){
 
 	//normal servo operation, set the angle to go to and wait the appropriate amount of time
 	if (SERVO_TYPE == "NORMAL"){
-		nozzleServo.write(angleToSet, 60, true);
+		nozzleServo.write(angleToSet);
 		//delay(timeToRun);
 	}
 	//continuous servo operation, just run it for the appropriate amount of time
