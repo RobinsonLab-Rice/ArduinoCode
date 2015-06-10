@@ -6,7 +6,7 @@ void serialEvent() {
 	while (Serial.available()) {
 		char inChar = (char) Serial.read();
 		//if the end of the string has been reached, parse it and clear our input string
-		if (inChar == '/n') {
+		if (inChar == '\n') {
   			parse(serialInput);
   			serialInput = "";
 		}
