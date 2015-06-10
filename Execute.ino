@@ -15,12 +15,24 @@ void execute(String command, String parameter){
 	else if (command.compareTo("nozzleHeight") == 0){
 		setNozzleHeight(parameter);
 	}
+        else if (command.compareTo("servoMicros") == 0){
+		nozzleServo.writeMicroseconds(parameter.toInt());
+	}
 	else if (command.compareTo("calibrate") == 0){
 		calibrate();
 	}
 	else if (command.compareTo("dispense") == 0){
 		parseDispense(parameter);
 	}
+        else if (command.compareTo("pset") == 0)  {
+                setPin(parameter);
+        }
+        else if (command.compareTo("setXSpeed") == 0)  {
+                xMotor.setMaxSpeed(parameter.toInt());
+        }
+        else if (command.compareTo("setYSpeed") == 0)  {
+                yMotor.setMaxSpeed(parameter.toInt());
+        }
 	else{
 		Serial.println("Didn't recognize the command: " + command + ":" + parameter);
 	}
@@ -61,6 +73,19 @@ void parseMove(String parameter){
 }
 
 /**
+ * Moves the arm to the relative location defined by the two input floats, which are in mms.
+ */
+void moveMillimeters(float xToMove, float yToMove){
+	float mmToStepConversion = Y_BOUND/92;
+
+	//convert the input cm's to steps for the motor
+	int xSteps = round(xToMove*mmToStepConversion);
+	int ySteps = round(yToMove*mmToStepConversion);
+
+	moveSteps(xSteps, ySteps);
+}
+
+/**
  * Parse the input move parameter, then call moveSteps to actually do the movement.
  *
  * @param parameter - movement, in steps, relative to current position, in the form of parameter = x,y
@@ -73,19 +98,6 @@ void parseMoveSteps(String parameter){
 
 	//and now call to move the motor that amount
 	moveSteps(xToMove, yToMove);
-}
-
-/**
- * Moves the arm to the relative location defined by the two input floats, which are in mms.
- */
-void moveMillimeters(float xToMove, float yToMove){
-	float mmToStepConversion = Y_BOUND/92;
-
-	//convert the input cm's to steps for the motor
-	int xSteps = round(xToMove*mmToStepConversion);
-	int ySteps = round(yToMove*mmToStepConversion);
-
-	moveSteps(xSteps, ySteps);
 }
 
 void moveSteps(int xSteps, int ySteps){
@@ -102,6 +114,11 @@ void moveSteps(int xSteps, int ySteps){
 		digitalWrite(xAxisEnable, LOW);
 		digitalWrite(yAxisEnable, LOW);
 		xMotor.move(xSteps);
+                if (xMotor.distanceToGo() > 0)  {
+                  digitalWrite(49,HIGH);
+                }  else  {
+                  digitalWrite(49,LOW);
+                }
 		yMotor.move(ySteps);
 
 		//update the failsafe internal state tracker
@@ -126,7 +143,7 @@ void setNozzleHeight(String parameter){
 
 	//normal servo operation, set the angle to go to and wait the appropriate amount of time
 	if (SERVO_TYPE == "NORMAL"){
-		nozzleServo.write(angleToSet);
+		nozzleServo.write(angleToSet, 60, true);
 		//delay(timeToRun);
 	}
 	//continuous servo operation, just run it for the appropriate amount of time
@@ -148,14 +165,39 @@ void calibrate(){
 	//calibrate in y direction
 	digitalWrite(xAxisEnable, LOW);
 	digitalWrite(yAxisEnable, LOW);
+        
+        // Redone to simultaneously calibrate X and Y together
+        yMotor.move(-9000);
+        xMotor.move(-9000);
+        digitalWrite(49,LOW);
+        while(!digitalRead(calibrateY) && !digitalRead(calibrateX))  {
+          yMotor.run();
+          xMotor.run();
+        }
+        while(!digitalRead(calibrateY))  {
+          yMotor.run();
+        }
+        while(!digitalRead(calibrateX))  {
+          xMotor.run();
+        }
+        xMotor.setCurrentPosition(0);
+        xMotor.move(0);
+        yMotor.setCurrentPosition(0);
+        yMotor.move(0);
+        
+        /*  No Longer Needed - Old calibration for Y then X
 	calibrateDirection(yMotor, calibrateY);
 	//calibate in x direction
 	calibrateDirection(xMotor, calibrateX);
-	digitalWrite(xAxisEnable, HIGH);
+	*/
+        
+        digitalWrite(xAxisEnable, HIGH);
 	digitalWrite(yAxisEnable, HIGH);
 	//update our failsafe tracker
 	currentPosition[0] = 0;
 	currentPosition[1] = 0;
+        
+        Serial.println("Finished");
 }
 
 /**
@@ -187,4 +229,8 @@ void parseDispense(String parameter){
 	taskIsExecuting = 1;
 	digitalWrite(pumpEnable, LOW);
 	pumpMotor.move(steps);
+}
+
+void setPin(String parameter)  {
+  digitalWrite(49,parameter.toInt());
 }

@@ -42,5 +42,5 @@ void initializeMotors(){
  * Initializes servos by setting their initial pin states and attaching servos to the pins.
  */
 void initializeServos(){
-	nozzleServo.attach(nozzleServoPin);
+	nozzleServo.attach(nozzleServoPin,1000,2000);
 }

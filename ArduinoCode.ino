@@ -10,8 +10,7 @@
  * http://www.airspayce.com/mikem/arduino/AccelStepper/index.html
  * and install it in the libraries folder of the Arduino program file.
  */
-//#include <VarSpeedServo.h> 
-#include <Servo.h>
+#include <VarSpeedServo.h> 
 #include "AccelStepper.h"
 
 /**
@@ -60,7 +59,7 @@ const int Y_BOUND = 3720;
  * Servo that controls the nozzle on arm that lowers down.
  * TODO: encapsulate the SERVO_TYPE and timeForCompleteRotation in a constructor for wrapper servo class.
  */
-Servo nozzleServo;
+VarSpeedServo nozzleServo;
 const String SERVO_TYPE = "NORMAL";
 /**
  * Amount of time (in mS) the servo takes for a 180 degree rotation, should be changed depending on end servo.
@@ -74,6 +73,11 @@ const int timeForCompleteRotation = 500;
 AccelStepper xMotor(1, xAxisStep, xAxisDir);
 AccelStepper yMotor(1, yAxisStep, yAxisDir);
 AccelStepper pumpMotor(1, pumpStep, pumpDir);
+
+boolean xRunning = false;
+boolean yRunning = false;
+boolean pumpRunning = false;
+boolean xDirection = true;
 
 /**
  * Current position of the arm, only to be used as a backup in case the software pushes it out of bounds
@@ -97,10 +101,10 @@ String serialInput = "";
 void setup()  {
 	initializeMotors();		//Set initial speed and acceleration values of all motors
 	initializeServos();     //Gives all servos their appropriate pin
+  pinMode(49,OUTPUT);
   Serial.begin(9600);
   Serial.println("Ready");
   calibrate();
-  Serial.println("Finished Calibration");
 }
 
 /**
@@ -111,18 +115,23 @@ void setup()  {
  * TODO: put the runs in a timer with appropriate interval, and just put the arduino into a low power mode otherwise
  */
 void loop()  {
-  if ((xMotor.distanceToGo() == 0) && (yMotor.distanceToGo() == 0) && (taskIsExecuting == 0)){
+  xRunning = xMotor.run();
+  yRunning = yMotor.run();
+  pumpRunning = pumpMotor.run();
+  if (taskIsExecuting == 0) {
+  if (xRunning == false && yRunning == false){
     Serial.println("Done");
     digitalWrite(xAxisEnable, HIGH);
     digitalWrite(yAxisEnable, HIGH);
     taskIsExecuting = -1;
-  }
-  if ((pumpMotor.distanceToGo() == 0) && (taskIsExecuting == 1)){
+  }}
+  if (taskIsExecuting == 1)  {
+  if (pumpRunning == false){
     digitalWrite(pumpEnable, HIGH);
     delay(3000);
     Serial.println("Done");
     taskIsExecuting = -1;
-  }
+  }}
 
 	// if ((xMotor.distanceToGo() == 0) && (yMotor.distanceToGo() == 0) && (pumpMotor.distanceToGo() == 0) && (taskIsExecuting == true)){
 	// 	//send back done so that we can have another task sent.
@@ -133,7 +142,16 @@ void loop()  {
  //    digitalWrite(pumpEnable, HIGH);
  //    taskIsExecuting = false;
  //  }
-	xMotor.run();
-	yMotor.run();
-  pumpMotor.run();
+  /*
+  if (xMotor.distanceToGo() > 0)  {
+    if (!xDirection)  {
+      digitalWrite(49,HIGH);
+      xDirection = true;
+    }
+  }  else  {
+    if (xDirection)  {
+      digitalWrite(49,LOW);
+      xDirection = false;
+    }
+  } */
 }
