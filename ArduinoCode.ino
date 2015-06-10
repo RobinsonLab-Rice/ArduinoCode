@@ -70,9 +70,9 @@ const int timeForCompleteRotation = 500;
  * Motors that control the x-y movement of the arm.
  * TODO: fill the 3rd and 4th parameter with appropriate values, I just guessed here.
  */
-AccelStepper xMotor(AccelStepper::DRIVER, xAxisStep, xAxisDir);
-AccelStepper yMotor(AccelStepper::DRIVER, yAxisStep, yAxisDir);
-AccelStepper pumpMotor(AccelStepper::DRIVER, pumpStep, pumpDir);
+AccelStepper xMotor(1, xAxisStep, xAxisDir);
+AccelStepper yMotor(1, yAxisStep, yAxisDir);
+AccelStepper pumpMotor(1, pumpStep, pumpDir);
 
 /**
  * Current position of the arm, only to be used as a backup in case the software pushes it out of bounds
