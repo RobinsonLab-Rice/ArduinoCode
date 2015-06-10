@@ -9,6 +9,9 @@ void execute(String command, String parameter){
 	if (command.compareTo("move") == 0){
 		parseMove(parameter);
 	}
+        else if (command.compareTo("moveTo") == 0){
+		parseMoveTo(parameter);
+	}
 	else if (command.compareTo("moveSteps") == 0){
 		parseMoveSteps(parameter);
 	}
@@ -98,6 +101,39 @@ void parseMoveSteps(String parameter){
 
 	//and now call to move the motor that amount
 	moveSteps(xToMove, yToMove);
+}
+
+void parseMoveTo(String parameter){
+	//separate the x from y values in this parameter
+	int delimPos = parameter.indexOf(',');
+	int xToMove = (parameter.substring(0, delimPos)).toInt();
+	int yToMove = (parameter.substring(delimPos + 1)).toInt();
+
+	//and now call to move the motor that amount
+	moveToStep(xToMove, yToMove);
+}
+
+void moveToStep(int xSteps, int ySteps){
+	//if the software is telling motors to move out of their allowed bounds, don't do it
+	if (xMotor.currentPosition() + xSteps > X_BOUND){
+		Serial.println("Arm is going too far in x direction!");
+	}
+	else if (yMotor.currentPosition() + ySteps > Y_BOUND){
+		Serial.println("Arm is going too far in y direction!");
+	}
+	//actually set AccelStepper to move the motors, relative to the current position
+	else{
+		taskIsExecuting = 0;
+		digitalWrite(xAxisEnable, LOW);
+		digitalWrite(yAxisEnable, LOW);
+		xMotor.moveTo(xSteps);
+                if (xMotor.distanceToGo() > 0)  {
+                  digitalWrite(49,HIGH);
+                }  else  {
+                  digitalWrite(49,LOW);
+                }
+		yMotor.moveTo(ySteps);
+	}
 }
 
 void moveSteps(int xSteps, int ySteps){
