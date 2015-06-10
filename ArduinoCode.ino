@@ -10,7 +10,8 @@
  * http://www.airspayce.com/mikem/arduino/AccelStepper/index.html
  * and install it in the libraries folder of the Arduino program file.
  */
-#include <VarSpeedServo.h> 
+//#include <VarSpeedServo.h>
+#include <Servo.h>
 #include "AccelStepper.h"
 
 /**
@@ -59,7 +60,8 @@ const int Y_BOUND = 3720;
  * Servo that controls the nozzle on arm that lowers down.
  * TODO: encapsulate the SERVO_TYPE and timeForCompleteRotation in a constructor for wrapper servo class.
  */
-VarSpeedServo nozzleServo;
+//VarSpeedServo nozzleServo;
+Servo nozzleServo;
 const String SERVO_TYPE = "NORMAL";
 /**
  * Amount of time (in mS) the servo takes for a 180 degree rotation, should be changed depending on end servo.
