@@ -6,23 +6,26 @@
  */
 void execute(String command, String parameter){
 
-	if (command.compareTo("move") == 0){
+	if (command.compareTo("moveTo") == 0){
 		parseMove(parameter);
 	}
-        else if (command.compareTo("moveTo") == 0){
+        else if (command.compareTo("moveSteps") == 0){
 		parseMoveTo(parameter);
-	}
-	else if (command.compareTo("moveSteps") == 0){
-		parseMoveSteps(parameter);
-	}
-	else if (command.compareTo("nozzleHeight") == 0){
-		setNozzleHeight(parameter);
 	}
         else if (command.compareTo("servoMicros") == 0){
 		nozzleServo.writeMicroseconds(parameter.toInt());
 	}
 	else if (command.compareTo("calibrate") == 0){
 		calibrate();
+	}
+	else if (command.compareTo("check") == 0){
+		Serial.println("Position: " + Motor.currentPosition() + " , " + yMotor.currentPosition());
+	}
+	else if (command.compareTo("move") == 0){
+		parseMoveSteps(parameter);
+	}
+	else if (command.compareTo("nozzleHeight") == 0){
+		setNozzleHeight(parameter);
 	}
 	else if (command.compareTo("dispense") == 0){
 		parseDispense(parameter);
