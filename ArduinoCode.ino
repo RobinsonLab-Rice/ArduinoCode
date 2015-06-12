@@ -76,8 +76,8 @@ AccelStepper xMotor(1, xAxisStep, xAxisDir);
 AccelStepper yMotor(1, yAxisStep, yAxisDir);
 AccelStepper pumpMotor(1, pumpStep, pumpDir);
 
-boolean xRunning = false;
-boolean yRunning = false;
+volatile boolean xRunning = false;
+volatile boolean yRunning = false;
 boolean pumpRunning = false;
 boolean xDirection = true;
 
@@ -125,6 +125,9 @@ void loop()  {
     Serial.println("Done");
     digitalWrite(xAxisEnable, HIGH);
     digitalWrite(yAxisEnable, HIGH);
+    digitalWrite(pumpEnable, HIGH);
+    currentPosition[0] = xMotor.currentPosition();
+    currentPosition[1] = yMotor.currentPosition();
     taskIsExecuting = -1;
   }}
   if (taskIsExecuting == 1)  {

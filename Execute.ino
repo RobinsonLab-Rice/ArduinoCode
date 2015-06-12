@@ -7,10 +7,10 @@
 void execute(String command, String parameter){
 
 	if (command.compareTo("moveTo") == 0){
-		parseMove(parameter);
+		parseMoveTo(parameter);
 	}
         else if (command.compareTo("moveSteps") == 0){
-		parseMoveTo(parameter);
+		parseMoveSteps(parameter);
 	}
         else if (command.compareTo("servoMicros") == 0){
 		nozzleServo.writeMicroseconds(parameter.toInt());
@@ -19,10 +19,13 @@ void execute(String command, String parameter){
 		calibrate();
 	}
 	else if (command.compareTo("check") == 0){
-		Serial.println("Position: " + Motor.currentPosition() + " , " + yMotor.currentPosition());
+		Serial.print("Position: ");
+                Serial.print(xMotor.currentPosition());
+                Serial.print(" , ");
+                Serial.println(yMotor.currentPosition());
 	}
 	else if (command.compareTo("move") == 0){
-		parseMoveSteps(parameter);
+		parseMove(parameter);
 	}
 	else if (command.compareTo("nozzleHeight") == 0){
 		setNozzleHeight(parameter);
@@ -118,10 +121,10 @@ void parseMoveTo(String parameter){
 
 void moveToStep(int xSteps, int ySteps){
 	//if the software is telling motors to move out of their allowed bounds, don't do it
-	if (xMotor.currentPosition() + xSteps > X_BOUND){
+	if (xSteps > X_BOUND){
 		Serial.println("Arm is going too far in x direction!");
 	}
-	else if (yMotor.currentPosition() + ySteps > Y_BOUND){
+	else if (ySteps > Y_BOUND){
 		Serial.println("Arm is going too far in y direction!");
 	}
 	//actually set AccelStepper to move the motors, relative to the current position
@@ -136,15 +139,17 @@ void moveToStep(int xSteps, int ySteps){
                   digitalWrite(49,LOW);
                 }
 		yMotor.moveTo(ySteps);
+                
+        
 	}
 }
 
 void moveSteps(int xSteps, int ySteps){
 	//if the software is telling motors to move out of their allowed bounds, don't do it
-	if (currentPosition[0] + xSteps > X_BOUND){
+	if (xMotor.currentPosition() + xSteps > X_BOUND){
 		Serial.println("Arm is going too far in x direction!");
 	}
-	else if (currentPosition[1] + ySteps > Y_BOUND){
+	else if (yMotor.currentPosition() + ySteps > Y_BOUND){
 		Serial.println("Arm is going too far in y direction!");
 	}
 	//actually set AccelStepper to move the motors, relative to the current position
@@ -161,8 +166,8 @@ void moveSteps(int xSteps, int ySteps){
 		yMotor.move(ySteps);
 
 		//update the failsafe internal state tracker
-		currentPosition[0] += xSteps;
-		currentPosition[1] += ySteps;
+		//currentPosition[0] += xSteps;
+		//currentPosition[1] += ySteps;
 	}
 }
 
