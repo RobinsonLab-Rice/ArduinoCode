@@ -42,6 +42,15 @@ void execute(String command, String parameter){
         else if (command.compareTo("setYSpeed") == 0)  {
                 yMotor.setMaxSpeed(parameter.toInt());
         }
+        else if (command.compareTo("precisionOn") == 0)  {
+                enableOFF = false;
+        }
+        else if (command.compareTo("precisionOff") == 0)  {
+                enableOFF = true;
+                if (taskIsExecuting == -1)  {
+                  taskIsExecuting = 0;
+                }
+        }
 	else{
 		Serial.println("Didn't recognize the command: " + command + ":" + parameter);
 	}
@@ -134,12 +143,11 @@ void moveToStep(int xSteps, int ySteps){
 		digitalWrite(yAxisEnable, LOW);
 		xMotor.moveTo(xSteps);
                 if (xMotor.distanceToGo() > 0)  {
-                  digitalWrite(49,HIGH);
+                  digitalWrite(xPAxisDir,LOW);
                 }  else  {
-                  digitalWrite(49,LOW);
+                  digitalWrite(xPAxisDir,HIGH);
                 }
 		yMotor.moveTo(ySteps);
-                
         
 	}
 }
@@ -159,12 +167,12 @@ void moveSteps(int xSteps, int ySteps){
 		digitalWrite(yAxisEnable, LOW);
 		xMotor.move(xSteps);
                 if (xMotor.distanceToGo() > 0)  {
-                  digitalWrite(49,HIGH);
+                  digitalWrite(xPAxisDir,LOW);
                 }  else  {
-                  digitalWrite(49,LOW);
+                  digitalWrite(xPAxisDir,HIGH);
                 }
 		yMotor.move(ySteps);
-
+                
 		//update the failsafe internal state tracker
 		//currentPosition[0] += xSteps;
 		//currentPosition[1] += ySteps;
@@ -213,7 +221,7 @@ void calibrate(){
         // Redone to simultaneously calibrate X and Y together
         yMotor.move(-10000);
         xMotor.move(-10000);
-        digitalWrite(49,LOW);
+        digitalWrite(xPAxisDir,HIGH);
         while(!digitalRead(calibrateY) && !digitalRead(calibrateX))  {
           yMotor.run();
           xMotor.run();

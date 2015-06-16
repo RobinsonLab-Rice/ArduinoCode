@@ -22,33 +22,19 @@
  */
 const int nozzleServoPin = 22;   //PWM		Servo for Fluid Handler
 const int valvePin = 31;
-const int pumpEnable = 32;    //enable pin for syringe stepper
-const int pumpStep = 33;      //step pin for syringe stepper
-const int pumpDir = 34;       //dir pin for syringle stepper
-const int calibrateX = 35;		//input 	used to calibrate, turns high when the arm is at (0,X)
-const int calibrateY = 37;		//input 	used to calibrate, turns high when the arm is at (X,0)
-const int yAxisEnable = 36;
-const int yAxisStep = 38;
-const int yAxisDir = 39;
-const int xAxisEnable = 40;
-const int xAxisStep = 41;
-const int xAxisDir = 42;     //LOW is clockwise
+const int pumpEnable = 31;    //enable pin for syringe stepper
+const int pumpStep = 26;      //step pin for syringe stepper
+const int pumpDir = 30;       //dir pin for syringle stepper
+const int calibrateX = 2;		//input 	used to calibrate, turns high when the arm is at (0,X)
+const int calibrateY = 3;		//input 	used to calibrate, turns high when the arm is at (X,0)
+const int yAxisEnable = 37;
+const int yAxisStep = 34;
+const int yAxisDir = 38;
+const int xAxisEnable = 45;
+const int xAxisStep = 42;
+const int xAxisDir = 46;     //LOW is clockwise
+const int xPAxisDir = 49;
 
-
-//pin assignments for RAMPS board
-// const int nozzleServoPin = 4;   //PWM   Servo for Fluid Handler
-// const int valvePin = 31;
-// const int pumpEnable = 24;    //enable pin for syringe stepper
-// const int pumpStep = 26;      //step pin for syringe stepper
-// const int pumpDir = 28;       //dir pin for syringle stepper
-// const int calibrateX = 35;    //input   used to calibrate, turns high when the arm is at (0,X)
-// const int calibrateY = 37;    //input   used to calibrate, turns high when the arm is at (X,0)
-// const String yAxisEnable = A2;
-// const String yAxisStep = ;
-// const int yAxisDir = ;
-// const int xAxisEnable = ;
-// const int xAxisStep = ;
-// const int xAxisDir = ;     //LOW is clockwise
 
 /**
  * Maximum bounds that the arm is allowed to move over, in steps.
@@ -81,6 +67,8 @@ volatile boolean yRunning = false;
 boolean pumpRunning = false;
 boolean xDirection = true;
 
+boolean enableOFF = true;
+
 /**
  * Current position of the arm, only to be used as a backup in case the software pushes it out of bounds
  */
@@ -103,8 +91,8 @@ String serialInput = "";
 void setup()  {
 	initializeMotors();		//Set initial speed and acceleration values of all motors
 	initializeServos();     //Gives all servos their appropriate pin
-  pinMode(49,OUTPUT);
-  Serial.begin(9600);
+  pinMode(xPAxisDir,OUTPUT);
+  Serial.begin(115200);
   Serial.println("Ready");
   calibrate();
 }
@@ -117,26 +105,30 @@ void setup()  {
  * TODO: put the runs in a timer with appropriate interval, and just put the arduino into a low power mode otherwise
  */
 void loop()  {
-  xRunning = xMotor.run();
-  yRunning = yMotor.run();
-  pumpRunning = pumpMotor.run();
   if (taskIsExecuting == 0) {
+    xRunning = xMotor.run();
+    yRunning = yMotor.run();
   if (xRunning == false && yRunning == false){
     Serial.println("Done");
-    digitalWrite(xAxisEnable, HIGH);
-    digitalWrite(yAxisEnable, HIGH);
-    digitalWrite(pumpEnable, HIGH);
+    if (enableOFF)  {
+      digitalWrite(xAxisEnable, HIGH);
+      digitalWrite(yAxisEnable, HIGH);
+    }
+    //digitalWrite(pumpEnable, HIGH);
     currentPosition[0] = xMotor.currentPosition();
     currentPosition[1] = yMotor.currentPosition();
     taskIsExecuting = -1;
   }}
+  /*
   if (taskIsExecuting == 1)  {
+    pumpRunning = pumpMotor.run();
   if (pumpRunning == false){
     digitalWrite(pumpEnable, HIGH);
     delay(3000);
     Serial.println("Done");
     taskIsExecuting = -1;
   }}
+  */
 
 	// if ((xMotor.distanceToGo() == 0) && (yMotor.distanceToGo() == 0) && (pumpMotor.distanceToGo() == 0) && (taskIsExecuting == true)){
 	// 	//send back done so that we can have another task sent.

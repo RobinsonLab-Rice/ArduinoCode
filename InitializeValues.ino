@@ -22,11 +22,11 @@ void initializeMotors(){
 	digitalWrite(yAxisEnable, HIGH);
 	digitalWrite(pumpEnable, HIGH);
 
-	yMotor.setMaxSpeed(2400.0);
-	yMotor.setAcceleration(1800.0);
+	yMotor.setMaxSpeed(2500.0);
+	yMotor.setAcceleration(3000.0);
 
-	xMotor.setMaxSpeed(2400.0);
-	xMotor.setAcceleration(1800.0);
+	xMotor.setMaxSpeed(2500.0);
+	xMotor.setAcceleration(3000.0);
 
 	//pumpMotor.setMaxSpeed(300);
 	//pumpMotor.setAcceleration(200);
