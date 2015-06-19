@@ -22,11 +22,11 @@ void initializeMotors(){
 	digitalWrite(yAxisEnable, HIGH);
 	digitalWrite(pumpEnable, HIGH);
 
-	yMotor.setMaxSpeed(2500.0);
-	yMotor.setAcceleration(3000.0);
+	yMotor.setMaxSpeed(XYSpeed);
+	yMotor.setAcceleration(XYAccel);
 
-	xMotor.setMaxSpeed(2500.0);
-	xMotor.setAcceleration(3000.0);
+	xMotor.setMaxSpeed(XYSpeed);
+	xMotor.setAcceleration(XYAccel);
 
 	//pumpMotor.setMaxSpeed(300);
 	//pumpMotor.setAcceleration(200);
@@ -34,8 +34,8 @@ void initializeMotors(){
 	pumpMotor.setAcceleration(500);
 
 	//set calibrate pins to be inputs, check when calibrate() is called
-	pinMode(calibrateX, INPUT); 
-	pinMode(calibrateY, INPUT);
+	pinMode(calibrateX, INPUT_PULLUP); 
+	pinMode(calibrateY, INPUT_PULLUP);
 }
 
 /**

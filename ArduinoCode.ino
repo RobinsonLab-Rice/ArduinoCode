@@ -42,6 +42,9 @@ const int xPAxisDir = 49;
 const int X_BOUND = 9000;
 const int Y_BOUND = 3720;
 
+float XYSpeed = 6400.0;
+float XYAccel = 1600.0;
+
 /**
  * Servo that controls the nozzle on arm that lowers down.
  * TODO: encapsulate the SERVO_TYPE and timeForCompleteRotation in a constructor for wrapper servo class.
@@ -49,6 +52,8 @@ const int Y_BOUND = 3720;
 //VarSpeedServo nozzleServo;
 Servo nozzleServo;
 const String SERVO_TYPE = "NORMAL";
+boolean servoAttached = false;
+unsigned long servoActivated = 0;
 /**
  * Amount of time (in mS) the servo takes for a 180 degree rotation, should be changed depending on end servo.
  */
@@ -64,6 +69,7 @@ AccelStepper pumpMotor(1, pumpStep, pumpDir);
 
 volatile boolean xRunning = false;
 volatile boolean yRunning = false;
+unsigned long XYActivated = 0;
 boolean pumpRunning = false;
 boolean xDirection = true;
 
@@ -95,6 +101,7 @@ void setup()  {
   Serial.begin(115200);
   Serial.println("Ready");
   calibrate();
+  nozzleServo.detach();
 }
 
 /**
@@ -111,14 +118,29 @@ void loop()  {
   if (xRunning == false && yRunning == false){
     Serial.println("Done");
     if (enableOFF)  {
-      digitalWrite(xAxisEnable, HIGH);
-      digitalWrite(yAxisEnable, HIGH);
+      XYActivated = millis();
+      //digitalWrite(xAxisEnable, HIGH);
+      //digitalWrite(yAxisEnable, HIGH);
     }
     //digitalWrite(pumpEnable, HIGH);
     currentPosition[0] = xMotor.currentPosition();
     currentPosition[1] = yMotor.currentPosition();
     taskIsExecuting = -1;
-  }}
+  }}else if (XYActivated > 0)  {
+    unsigned long temp = millis();
+    if (temp - XYActivated > 1000 || XYActivated > temp)  {
+      digitalWrite(xAxisEnable, HIGH);
+      digitalWrite(yAxisEnable, HIGH);
+      XYActivated = 0;
+    }
+  }
+  if (servoAttached)  {
+    unsigned long temp = millis();
+    if (temp - servoActivated > 3000 || servoActivated > temp)  {
+      nozzleServo.detach();
+      servoAttached = false;
+    }
+  }
   /*
   if (taskIsExecuting == 1)  {
     pumpRunning = pumpMotor.run();

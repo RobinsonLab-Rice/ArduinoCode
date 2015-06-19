@@ -13,11 +13,25 @@ void execute(String command, String parameter){
 		parseMoveSteps(parameter);
 	}
         else if (command.compareTo("servoMicros") == 0){
+                if (!servoAttached)  {
+                  nozzleServo.attach(nozzleServoPin,1000,2000);
+                  servoAttached = true;
+                }
 		nozzleServo.writeMicroseconds(parameter.toInt());
+                servoActivated = millis();
 	}
 	else if (command.compareTo("calibrate") == 0){
 		calibrate();
 	}
+        else if (command.compareTo("precisionOn") == 0)  {
+                enableOFF = false;
+        }
+        else if (command.compareTo("precisionOff") == 0)  {
+                enableOFF = true;
+                if (taskIsExecuting == -1)  {
+                  taskIsExecuting = 0;
+                }
+        }
 	else if (command.compareTo("check") == 0){
 		Serial.print("Position: ");
                 Serial.print(xMotor.currentPosition());
@@ -41,15 +55,6 @@ void execute(String command, String parameter){
         }
         else if (command.compareTo("setYSpeed") == 0)  {
                 yMotor.setMaxSpeed(parameter.toInt());
-        }
-        else if (command.compareTo("precisionOn") == 0)  {
-                enableOFF = false;
-        }
-        else if (command.compareTo("precisionOff") == 0)  {
-                enableOFF = true;
-                if (taskIsExecuting == -1)  {
-                  taskIsExecuting = 0;
-                }
         }
 	else{
 		Serial.println("Didn't recognize the command: " + command + ":" + parameter);
@@ -192,6 +197,12 @@ void moveSteps(int xSteps, int ySteps){
 void setNozzleHeight(String parameter){
 	int angleToSet = parameter.toInt();
 	int timeToRun = timeForCompleteRotation*angleToSet/180;
+        
+        if (!servoAttached)  {
+          nozzleServo.attach(nozzleServoPin,1000,2000);
+          servoAttached = true;
+        }
+        servoActivated = millis();
 
 	//normal servo operation, set the angle to go to and wait the appropriate amount of time
 	if (SERVO_TYPE == "NORMAL"){
@@ -205,7 +216,6 @@ void setNozzleHeight(String parameter){
 	//once the servo is done moving, send a message to the computer telling it this command is done, and it is
 	//ready to receive another.
 	Serial.println("Done");
-
 }
 
 /**
@@ -218,36 +228,54 @@ void calibrate(){
 	digitalWrite(xAxisEnable, LOW);
 	digitalWrite(yAxisEnable, LOW);
         
+        xMotor.setMaxSpeed(1200);
+        yMotor.setMaxSpeed(1200);
+        
         // Redone to simultaneously calibrate X and Y together
-        yMotor.move(-10000);
-        xMotor.move(-10000);
+        yMotor.move(-4000);
+        xMotor.move(-9500);
         digitalWrite(xPAxisDir,HIGH);
-        while(!digitalRead(calibrateY) && !digitalRead(calibrateX))  {
-          yMotor.run();
-          xMotor.run();
+        boolean y = true;
+        boolean x = true;
+        while(digitalRead(calibrateY) && digitalRead(calibrateX))  {
+          y = yMotor.run();
+          x = xMotor.run();
+          /*
+          if (!(x || y))  {
+            yMotor.move(-1000);
+            xMotor.move(-1000);
+          }
+          */
         }
-        while(!digitalRead(calibrateY))  {
-          yMotor.run();
+        while(digitalRead(calibrateY))  {
+          y = yMotor.run();
+          /*
+          if (!y)  {
+            yMotor.move(-1000);
+          }
+          */
         }
-        while(!digitalRead(calibrateX))  {
-          xMotor.run();
+        while(digitalRead(calibrateX))  {
+          x = xMotor.run();
+          /*
+          if (!x)  {
+            xMotor.move(-1000);
+          }
+          */
         }
         xMotor.setCurrentPosition(0);
         xMotor.move(0);
         yMotor.setCurrentPosition(0);
         yMotor.move(0);
         
-        /*  No Longer Needed - Old calibration for Y then X
-	calibrateDirection(yMotor, calibrateY);
-	//calibate in x direction
-	calibrateDirection(xMotor, calibrateX);
-	*/
-        
         digitalWrite(xAxisEnable, HIGH);
 	digitalWrite(yAxisEnable, HIGH);
 	//update our failsafe tracker
 	currentPosition[0] = 0;
 	currentPosition[1] = 0;
+        
+        xMotor.setMaxSpeed(XYSpeed);
+        yMotor.setMaxSpeed(XYSpeed);
         
         Serial.println("Finished");
 }
@@ -260,7 +288,7 @@ void calibrateDirection(AccelStepper motor, int motorPin){
 	
 	motor.move(-9000);
 	//while the calibrate pin is still low (we're still in bounds)
-	while(digitalRead(motorPin) == LOW){
+	while(digitalRead(motorPin)){
 		//move it toward the bounds
 		motor.run();
 	}

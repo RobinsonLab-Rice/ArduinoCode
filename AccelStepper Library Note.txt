@@ -1,0 +1,5 @@
+For proper functionality, only use AccelStepper library builds 1.45 or later.  It is easy to download an old version of the library, and it is limited by the millis() function for time resolution and interrupt blocking.
+
+If possible, download from:
+
+http://www.airspayce.com/mikem/arduino/AccelStepper/
